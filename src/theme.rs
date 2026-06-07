@@ -1,6 +1,12 @@
 //! Palette et style de la GUI, inspirés de l'identité kSuite / Infomaniak Mail.
 
-use eframe::egui::{self, Color32, CornerRadius, Stroke};
+use eframe::egui::{
+    self, Color32, CornerRadius, FontData, FontDefinitions, FontFamily, FontId, Stroke, TextStyle,
+};
+use std::sync::Arc;
+
+/// Nom de la famille semi-grasse (titres, boutons, libellés).
+const SEMIBOLD: &str = "semibold";
 
 /// Rose primaire Infomaniak Mail.
 pub const PINK: Color32 = Color32::from_rgb(0xFF, 0x5B, 0x97);
@@ -16,6 +22,41 @@ pub const BG_SOFT: Color32 = Color32::from_rgb(0xF7, 0xF7, 0xFA);
 pub const TEXT: Color32 = Color32::from_rgb(0x2B, 0x2B, 0x33);
 /// Texte secondaire / atténué.
 pub const MUTED: Color32 = Color32::from_rgb(0x9A, 0x9A, 0xA8);
+
+/// Police d'un titre/élément semi-gras (famille Inter SemiBold).
+pub fn semibold(size: f32) -> FontId {
+    FontId::new(size, FontFamily::Name(SEMIBOLD.into()))
+}
+
+/// Installe la police Inter (lisible, OFL) comme police par défaut + une
+/// famille semi-grasse pour les titres. À appeler avant [`apply`].
+pub fn install_fonts(ctx: &egui::Context) {
+    let mut fonts = FontDefinitions::default();
+    fonts.font_data.insert(
+        "Inter".to_owned(),
+        Arc::new(FontData::from_static(include_bytes!(
+            "../assets/fonts/Inter-Regular.ttf"
+        ))),
+    );
+    fonts.font_data.insert(
+        "Inter-SemiBold".to_owned(),
+        Arc::new(FontData::from_static(include_bytes!(
+            "../assets/fonts/Inter-SemiBold.ttf"
+        ))),
+    );
+    // Inter en tête de la famille proportionnelle (corps de texte).
+    fonts
+        .families
+        .entry(FontFamily::Proportional)
+        .or_default()
+        .insert(0, "Inter".to_owned());
+    // Famille semi-grasse dédiée (titres, boutons).
+    fonts.families.insert(
+        FontFamily::Name(SEMIBOLD.into()),
+        vec!["Inter-SemiBold".to_owned(), "Inter".to_owned()],
+    );
+    ctx.set_fonts(fonts);
+}
 
 /// Applique le thème clair Infomaniak à un contexte egui.
 pub fn apply(ctx: &egui::Context) {
@@ -50,8 +91,25 @@ pub fn apply(ctx: &egui::Context) {
     v.widgets.hovered.bg_stroke = Stroke::new(1.0, PINK_LIGHT);
 
     // Espacements aérés.
-    style.spacing.item_spacing = egui::vec2(10.0, 10.0);
-    style.spacing.button_padding = egui::vec2(14.0, 8.0);
+    style.spacing.item_spacing = egui::vec2(10.0, 9.0);
+    style.spacing.button_padding = egui::vec2(14.0, 9.0);
+    style.spacing.interact_size.y = 30.0; // hauteur des champs/boutons
+
+    // Hiérarchie typographique cohérente (Inter).
+    style.text_styles = [
+        (TextStyle::Heading, semibold(22.0)),
+        (TextStyle::Body, FontId::new(14.5, FontFamily::Proportional)),
+        (TextStyle::Button, semibold(14.5)),
+        (
+            TextStyle::Small,
+            FontId::new(12.0, FontFamily::Proportional),
+        ),
+        (
+            TextStyle::Monospace,
+            FontId::new(12.5, FontFamily::Monospace),
+        ),
+    ]
+    .into();
 
     ctx.set_style(style);
 }

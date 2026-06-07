@@ -77,6 +77,7 @@ impl Default for App {
 impl App {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
         egui_extras::install_image_loaders(&cc.egui_ctx);
+        theme::install_fonts(&cc.egui_ctx);
         theme::apply(&cc.egui_ctx);
         App::default()
     }
@@ -215,51 +216,61 @@ impl eframe::App for App {
         }
 
         sidebar(ctx);
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.add_space(8.0);
-            ui.heading(
-                RichText::new("Exporter mes mails")
-                    .size(24.0)
-                    .color(theme::TEXT)
-                    .strong(),
-            );
-            ui.label(
-                RichText::new("Sauvegarde non-destructive de tous vos dossiers IMAP en .eml")
-                    .color(theme::MUTED),
-            );
-            ui.add_space(16.0);
-
-            self.form_card(ui);
-            ui.add_space(16.0);
-            self.action_row(ui);
-
-            if self.status != Status::Idle {
+        egui::CentralPanel::default()
+            .frame(egui::Frame::new().fill(theme::BG_SOFT).inner_margin(24.0))
+            .show(ctx, |ui| {
+                ui.heading(RichText::new("Exporter mes mails").color(theme::TEXT));
+                ui.add_space(2.0);
+                ui.label(
+                    RichText::new("Sauvegarde non-destructive de tous vos dossiers IMAP en .eml")
+                        .color(theme::MUTED),
+                );
                 ui.add_space(16.0);
-                self.progress_card(ui);
-            }
-        });
+
+                self.form_card(ui);
+                ui.add_space(14.0);
+                self.action_row(ui);
+
+                if self.status != Status::Idle {
+                    ui.add_space(14.0);
+                    self.progress_card(ui);
+                }
+            });
     }
 }
 
 fn sidebar(ctx: &egui::Context) {
     egui::SidePanel::left("sidebar")
-        .exact_width(180.0)
+        .exact_width(168.0)
         .resizable(false)
-        .frame(egui::Frame::new().fill(theme::CARD).inner_margin(20.0))
+        .frame(egui::Frame::new().fill(theme::CARD).inner_margin(18.0))
         .show(ctx, |ui| {
             ui.vertical_centered(|ui| {
-                ui.add_space(12.0);
+                ui.add_space(18.0);
                 ui.add(
-                    egui::Image::new(egui::include_image!("../../assets/mail.svg")).max_width(72.0),
+                    egui::Image::new(egui::include_image!("../../assets/mail.svg")).max_width(64.0),
                 );
                 ui.add_space(12.0);
                 ui.label(
                     RichText::new("Mail Exporter")
-                        .size(17.0)
-                        .strong()
+                        .font(theme::semibold(16.0))
                         .color(theme::TEXT),
                 );
-                ui.label(RichText::new("Infomaniak").size(13.0).color(theme::PINK));
+                ui.label(
+                    RichText::new("Infomaniak")
+                        .font(theme::semibold(12.5))
+                        .color(theme::PINK),
+                );
+            });
+
+            // Version en pied de barre latérale.
+            ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+                ui.add_space(4.0);
+                ui.label(
+                    RichText::new(concat!("v", env!("CARGO_PKG_VERSION")))
+                        .small()
+                        .color(theme::MUTED),
+                );
             });
         });
 }
@@ -329,10 +340,14 @@ impl App {
     fn action_row(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             if self.status == Status::Running {
-                let cancel =
-                    egui::Button::new(RichText::new("Annuler").color(Color32::WHITE).strong())
-                        .fill(theme::PINK_DARK)
-                        .min_size(egui::vec2(140.0, 38.0));
+                let cancel = egui::Button::new(
+                    RichText::new("Annuler")
+                        .font(theme::semibold(14.5))
+                        .color(Color32::WHITE),
+                )
+                .fill(theme::PINK_DARK)
+                .corner_radius(10.0)
+                .min_size(egui::vec2(140.0, 40.0));
                 if ui.add(cancel).clicked() {
                     self.cancel.store(true, Ordering::Relaxed);
                     self.push_log("Annulation demandée…");
@@ -342,12 +357,12 @@ impl App {
             } else {
                 let start = egui::Button::new(
                     RichText::new("Exporter")
-                        .color(Color32::WHITE)
-                        .strong()
-                        .size(15.0),
+                        .font(theme::semibold(15.0))
+                        .color(Color32::WHITE),
                 )
                 .fill(theme::PINK)
-                .min_size(egui::vec2(160.0, 40.0));
+                .corner_radius(10.0)
+                .min_size(egui::vec2(170.0, 42.0));
                 if ui.add_enabled(self.can_start(), start).clicked() {
                     self.start_export();
                 }
@@ -432,16 +447,21 @@ fn card(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
 
 /// Champ avec libellé au-dessus.
 fn labeled(ui: &mut egui::Ui, label: &str, add: impl FnOnce(&mut egui::Ui)) {
-    ui.add_space(6.0);
-    ui.label(RichText::new(label).color(theme::TEXT).size(13.0));
+    ui.add_space(8.0);
+    ui.label(
+        RichText::new(label)
+            .font(theme::semibold(12.5))
+            .color(theme::TEXT),
+    );
+    ui.add_space(2.0);
     add(ui);
 }
 
 fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([860.0, 660.0])
-            .with_min_inner_size([640.0, 480.0])
+            .with_inner_size([680.0, 540.0])
+            .with_min_inner_size([560.0, 460.0])
             .with_title("Infomaniak Mail Exporter"),
         ..Default::default()
     };
