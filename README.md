@@ -12,17 +12,41 @@ Chaque mail est enregistré en `.eml` brut (format standard, **sans perte**,
 réimportable dans n'importe quel client mail), ses pièces jointes sont extraites
 dans un dossier dédié, et un `index.csv` récapitule tout.
 
+Deux interfaces, même moteur :
+
+- **GUI** (`infomaniak-mail-exporter-gui`) — application graphique aux couleurs
+  Infomaniak Mail : formulaire, barre de progression et journal en temps réel.
+- **CLI** (`infomaniak-mail-exporter`) — ligne de commande, idéale pour scripts
+  et serveurs.
+
 ## Installation
 
-Téléchargez le binaire pour votre plateforme depuis les
-[Releases](../../releases), ou compilez depuis les sources :
+Téléchargez l'archive pour votre plateforme depuis les
+[Releases](../../releases) (elle contient les deux binaires), ou compilez depuis
+les sources :
 
 ```sh
 cargo build --release
-# binaire : target/release/infomaniak-mail-exporter
+# GUI : target/release/infomaniak-mail-exporter-gui
+# CLI : target/release/infomaniak-mail-exporter
 ```
 
-## Utilisation
+> **Linux** — la GUI nécessite quelques bibliothèques système à la compilation :
+> `sudo apt-get install -y libgtk-3-dev libxkbcommon-dev libwayland-dev libxcb1-dev librsvg2-dev`
+
+## Interface graphique (GUI)
+
+```sh
+infomaniak-mail-exporter-gui
+```
+
+Renseignez votre adresse email, votre mot de passe et le dossier de sortie
+(bouton « Parcourir »), dépliez « Avancé » pour cibler des dossiers ou limiter
+le nombre de mails, puis cliquez **Exporter**. La progression et le journal
+s'affichent en direct ; « Annuler » stoppe proprement (l'état de reprise est
+sauvegardé).
+
+## Interface en ligne de commande (CLI)
 
 ```sh
 infomaniak-mail-exporter --email vous@votredomaine.ch --output ./export
