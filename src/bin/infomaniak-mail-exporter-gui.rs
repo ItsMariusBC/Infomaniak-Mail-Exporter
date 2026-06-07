@@ -506,12 +506,46 @@ fn labeled(ui: &mut egui::Ui, label: &str, add: impl FnOnce(&mut egui::Ui)) {
     add(ui);
 }
 
+/// Rasterise le logo SVG en icône d'application RGBA.
+fn load_icon() -> egui::IconData {
+    let svg = include_bytes!("../../assets/mail.svg");
+    let tree = resvg::usvg::Tree::from_data(svg, &resvg::usvg::Options::default())
+        .expect("SVG d'icône invalide");
+    let size = 256u32;
+    let mut pixmap = resvg::tiny_skia::Pixmap::new(size, size).expect("alloc pixmap icône");
+
+    let ts = tree.size();
+    let scale = size as f32 / ts.width().max(ts.height());
+    let tx = (size as f32 - ts.width() * scale) / 2.0;
+    let ty = (size as f32 - ts.height() * scale) / 2.0;
+    let transform = resvg::tiny_skia::Transform::from_scale(scale, scale).post_translate(tx, ty);
+    resvg::render(&tree, transform, &mut pixmap.as_mut());
+
+    // tiny-skia stocke en RGBA prémultiplié → dé-prémultiplier pour egui.
+    let mut rgba = pixmap.take();
+    for px in rgba.chunks_exact_mut(4) {
+        let a = px[3] as u32;
+        if a > 0 {
+            for c in px.iter_mut().take(3) {
+                *c = ((*c as u32 * 255 + a / 2) / a).min(255) as u8;
+            }
+        }
+    }
+
+    egui::IconData {
+        rgba,
+        width: size,
+        height: size,
+    }
+}
+
 fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([756.0, 580.0])
             .with_min_inner_size([700.0, 520.0])
-            .with_title("Infomaniak Mail Exporter"),
+            .with_title("Infomaniak Mail Exporter")
+            .with_icon(load_icon()),
         ..Default::default()
     };
     eframe::run_native(
