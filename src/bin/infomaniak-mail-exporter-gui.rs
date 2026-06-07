@@ -216,25 +216,53 @@ impl eframe::App for App {
         }
 
         sidebar(ctx);
+
+        // Barre d'action ancrée en bas : le bouton Exporter reste toujours visible.
+        egui::TopBottomPanel::bottom("actions")
+            .frame(
+                egui::Frame::new()
+                    .fill(theme::BG_SOFT)
+                    .inner_margin(egui::Margin {
+                        left: 24,
+                        right: 24,
+                        top: 14,
+                        bottom: 16,
+                    }),
+            )
+            .show(ctx, |ui| self.action_row(ui));
+
         egui::CentralPanel::default()
-            .frame(egui::Frame::new().fill(theme::BG_SOFT).inner_margin(24.0))
+            .frame(
+                egui::Frame::new()
+                    .fill(theme::BG_SOFT)
+                    .inner_margin(egui::Margin {
+                        left: 24,
+                        right: 24,
+                        top: 24,
+                        bottom: 8,
+                    }),
+            )
             .show(ctx, |ui| {
-                ui.heading(RichText::new("Exporter mes mails").color(theme::TEXT));
-                ui.add_space(2.0);
-                ui.label(
-                    RichText::new("Sauvegarde non-destructive de tous vos dossiers IMAP en .eml")
-                        .color(theme::MUTED),
-                );
-                ui.add_space(16.0);
+                egui::ScrollArea::vertical()
+                    .auto_shrink([false, false])
+                    .show(ui, |ui| {
+                        ui.heading(RichText::new("Exporter mes mails").color(theme::TEXT));
+                        ui.add_space(2.0);
+                        ui.label(
+                            RichText::new(
+                                "Sauvegarde non-destructive de tous vos dossiers IMAP en .eml",
+                            )
+                            .color(theme::MUTED),
+                        );
+                        ui.add_space(16.0);
 
-                self.form_card(ui);
-                ui.add_space(14.0);
-                self.action_row(ui);
+                        self.form_card(ui);
 
-                if self.status != Status::Idle {
-                    ui.add_space(14.0);
-                    self.progress_card(ui);
-                }
+                        if self.status != Status::Idle {
+                            ui.add_space(14.0);
+                            self.progress_card(ui);
+                        }
+                    });
             });
     }
 }
@@ -433,14 +461,17 @@ impl App {
     }
 }
 
-/// Carte blanche arrondie.
+/// Carte blanche arrondie, qui remplit exactement la largeur disponible.
 fn card(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
+    let margin = 18.0;
+    // Largeur du contenu = dispo - marges du Frame, sinon la carte déborde à droite.
+    let inner_w = (ui.available_width() - 2.0 * margin).max(0.0);
     egui::Frame::new()
         .fill(theme::CARD)
         .corner_radius(12.0)
-        .inner_margin(18.0)
+        .inner_margin(margin)
         .show(ui, |ui| {
-            ui.set_width(ui.available_width());
+            ui.set_width(inner_w);
             add(ui);
         });
 }
