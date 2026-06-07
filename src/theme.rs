@@ -95,6 +95,9 @@ pub fn apply(ctx: &egui::Context) {
     style.spacing.button_padding = egui::vec2(14.0, 9.0);
     style.spacing.interact_size.y = 30.0; // hauteur des champs/boutons
 
+    // Scrollbar flottant : il ne réserve pas de largeur → marges G/D symétriques.
+    style.spacing.scroll.floating = true;
+
     // Hiérarchie typographique cohérente (Inter).
     style.text_styles = [
         (TextStyle::Heading, semibold(22.0)),
