@@ -525,9 +525,9 @@ fn load_icon() -> egui::IconData {
     let mut rgba = pixmap.take();
     for px in rgba.chunks_exact_mut(4) {
         let a = px[3] as u32;
-        if a > 0 {
-            for c in px.iter_mut().take(3) {
-                *c = ((*c as u32 * 255 + a / 2) / a).min(255) as u8;
+        for c in px.iter_mut().take(3) {
+            if let Some(v) = (*c as u32 * 255).checked_div(a) {
+                *c = v.min(255) as u8;
             }
         }
     }
