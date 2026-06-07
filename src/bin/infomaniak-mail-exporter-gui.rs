@@ -223,21 +223,23 @@ impl eframe::App for App {
                 egui::Frame::new()
                     .fill(theme::BG_SOFT)
                     .inner_margin(egui::Margin {
-                        left: 24,
-                        right: 24,
+                        left: 20,
+                        right: 20,
                         top: 14,
                         bottom: 16,
                     }),
             )
-            .show(ctx, |ui| self.action_row(ui));
+            .show(ctx, |ui| {
+                centered_column(ui, |ui| self.action_row(ui));
+            });
 
         egui::CentralPanel::default()
             .frame(
                 egui::Frame::new()
                     .fill(theme::BG_SOFT)
                     .inner_margin(egui::Margin {
-                        left: 24,
-                        right: 24,
+                        left: 20,
+                        right: 20,
                         top: 24,
                         bottom: 8,
                     }),
@@ -246,25 +248,45 @@ impl eframe::App for App {
                 egui::ScrollArea::vertical()
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
-                        ui.heading(RichText::new("Exporter mes mails").color(theme::TEXT));
-                        ui.add_space(2.0);
-                        ui.label(
-                            RichText::new(
-                                "Sauvegarde non-destructive de tous vos dossiers IMAP en .eml",
-                            )
-                            .color(theme::MUTED),
-                        );
-                        ui.add_space(16.0);
+                        centered_column(ui, |ui| {
+                            ui.heading(RichText::new("Exporter mes mails").color(theme::TEXT));
+                            ui.add_space(2.0);
+                            ui.label(
+                                RichText::new(
+                                    "Sauvegarde non-destructive de tous vos dossiers IMAP en .eml",
+                                )
+                                .color(theme::MUTED),
+                            );
+                            ui.add_space(16.0);
 
-                        self.form_card(ui);
+                            self.form_card(ui);
 
-                        if self.status != Status::Idle {
-                            ui.add_space(14.0);
-                            self.progress_card(ui);
-                        }
+                            if self.status != Status::Idle {
+                                ui.add_space(14.0);
+                                self.progress_card(ui);
+                            }
+                        });
                     });
             });
     }
+}
+
+/// Largeur maximale du contenu : la carte ne s'étire pas avec la fenêtre.
+const CONTENT_WIDTH: f32 = 540.0;
+
+/// Place le contenu dans une colonne de largeur fixe, centrée horizontalement
+/// (marges gauche/droite égales qui grandissent avec la fenêtre).
+fn centered_column(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
+    let avail = ui.available_width();
+    let w = avail.min(CONTENT_WIDTH);
+    let side = ((avail - w) / 2.0).max(0.0);
+    ui.horizontal_top(|ui| {
+        ui.add_space(side);
+        ui.vertical(|ui| {
+            ui.set_width(w);
+            add(ui);
+        });
+    });
 }
 
 fn sidebar(ctx: &egui::Context) {
